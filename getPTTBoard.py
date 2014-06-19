@@ -68,8 +68,9 @@ def main():
 			except:
 				logger.error(href)
 				continue
-			f = open(out_dir+'/'+str(num)+'-'+str(index)+'.txt','w')
-			f.write(content.encode('utf-8'))
+			if content != None:
+				f = open(out_dir+'/'+str(num)+'-'+str(index)+'.txt','w')
+				f.write(content.encode('utf-8'))
 
 if __name__ == '__main__':
     main()
