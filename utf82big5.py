@@ -19,7 +19,11 @@ files = os.listdir(in_dir)
 
 for f in files:
     fi = codecs.open(join(in_dir,f),'r',encoding='utf8')
-    result = fi.read().encode('big5')
+    try:
+        result = fi.read().encode('big5')
+    except:
+        fi.close()
+        continue
     fo = open(join(out_dir,f),'w')
     fo.write(result)
     fi.close()
