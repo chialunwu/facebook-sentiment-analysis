@@ -1,90 +1,233 @@
+
 <html>
 <head>
-	<meta charset="utf-8">
-	<link rel="stylesheet" href="fb_lib/css/bootstrap.min.css">
-    <link rel="stylesheet" href="fb_lib/css/style.css">
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    	<script>
-    <script src="fb_lib/fblogin.js"></script>
-	window.fbAsyncInit = function(){
-		FB.init({
-			appId		: '456886387663432',
-			xfbml		: true,
-			status		: true,
-			cookie		: true,
-			oauth		: true,
-			version		: 'v1.0'
-		});
-	};
-	</script>
+  <meta charset="utf-8">
+  <title>Friends</title>
+  <script src="http://code.jquery.com/jquery-latest.js"></script>
+  <link href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+  
+    .container{
+      margin-top: 30px;
+    }
+    .thumbnail{
+      min-height: 380px;
+      padding: 6px;
+    }
+    .photo{
+      width: 240px;
+      max-height: 180px;
+      margin: 0;
+    }
+    .caption{
+      height: 180px;
+      padding: 0px 9px;
+    }
+    .picture{
+      height: 50px;
+      width: 50px;
+    }
+
+    #user_info {
+      margin-top: 20px;
+    }
+
+    .lightbox{
+      z-index: 1001;
+      background: rgba(255,255,255,0.9);
+      border-radius: 5px;
+      width: 30%;
+      height: 450px;
+      position: fixed;
+      top: 50px;
+      left: 35%;
+      display: none;
+      
+    }
+
+    .lightbox ul{
+        margin: 0px;
+        margin-top: -10px;
+    }
+
+    .lightbox #close{
+      position: relative;
+      left: 90%;  
+      background: url(https://dl-web.dropbox.com/get/close.png?w=AABq3cg7DMioeTynnx28JvPipXKaOAGkvHelA5sgGOcTEQ);
+      height: 45px;
+      width: 45px;
+      display: block;
+    }
+    .lightbox p{
+      width: 200px;
+      float: left;
+      padding: 0;
+      margin: 0 0 5px 0;
+      position: relative;
+      top: 10px;
+      left: 40px;
+      font-family: 微軟正黑體;
+    }
+    .content{
+      width: 98%;
+      height:380px;
+      overflow-y: scroll;
+      overflow-x:hidden;
+    }
+    ::-webkit-scrollbar{
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track{
+      background-color: #eaeaea;
+      border-left: 1px solid #ccc;
+    }
+    ::-webkit-scrollbar-thumb{
+      background-color: #ccc;  
+    }
+    ::-webkit-scrollbar-thumb:hover{
+      background-color: #aaa;
+    }
+    li{
+      line-height: 20px;
+      font-size: 14px;
+      margin: 10px 0 10px 0;
+    }
+    ul{
+      margin: 20px 0 0 50px;
+      list-style: none;
+    }
+
+    .hidden{
+      display: none;
+    }
+  </style>
 </head>
+
 <body>
 <div id="fb-root"></div>
-<div class="container">
+  <div class="container">
     <div class="jumbotron">
-      	<p class="title">IR</p>		
-      	<div class="user"></div>
-      	<button class="login btn btn-primary">FB登入</button>
-		<button class="getData btn btn-primary" style="display:none">開始抓取資料</button>
-	</div>
-	<div class="content bs-example"></div>
-	<div class="console"></div>
-</div>
+      <h1>Get Friend Info</h1>
+      <button class="login btn btn-primary">login</button>
+      <div class="user"></div>
+    </div>
+      <div class="content"></div>
+    <div class="row"></div>
+  </div>
+
+<script id="friends_posts" type="text/x-handlebars-template">
+
+
+</script>
+
+<script id="friends_likes" type="text/x-handlebars-template">
+  <ul>
+    {{#each .}}
+    <li>
+      <a href="http://www.facebook.com/{{id}}" target="blank">{{name}}</a>
+    </li>
+    {{/each}}
+  </ul>
+</script>
+
+<script id="friends_info" type="text/x-handlebars-template">
+{{#each .}}
+  <div class="col-sm-6 col-md-3">  
+    <div class="thumbnail">
+      <img class="photo" src="http://graph.facebook.com/{{id}}/picture?width=230&height=180" alt="...">
+      <div class="caption">
+        <a href="http://www.facebook.com/{{id}}" target="blank"><h3>{{name}}</h3></a>
+        <p ><a href="#" class="btn btn-primary postButton" id="{{id}}" role="button" onClick="getPost(id)">檢視貼文</a></p>
+      </div>
+    </div>
+  </div>
+{{/each}}
+</script>
+
+<script src="fb_lib/js/handlebars-1.0.rc.1.min.js"></script>
+<script src="http://connect.facebook.net/en_US/all.js"></script>
 <script>
-	$('.login').on('click',function(){
-		var require = 'user_friends,read_stream';
+        var MAX = 1000;
+        var accessToken;
+        var uid;
+function getPost(id){
+        var d = new Date();
+        var now = d.getTime();
+        timeStamp = (d.getFullYear()-1)+"-"+(d.getMonth()+1)+"-"+d.getDate();
 
-		FB.login(function(response){
-			if(response.status === 'connected'){
-				uid = response.authResponse.userID;
-				accessToken = response.authResponse.accessToken;
-				userURL = "https://graph.facebook.com/"+uid+"";
-				//dataURL = "https://graph.facebook.com/"+uid+"?fields=friends.fields(name,birthday,education)&access_token="+accessToken+"";
-				//dataURL_photos = "https://graph.facebook.com/"+uid+"/photos?type=tagged&limit=500"+"&access_token="+accessToken+"";
-				dataURL_friends = "https://graph.facebook.com/"+uid+"/friends?limit=5000"+"&access_token="+accessToken+"";
-				console.log(dataURL_friends);
-				var d = new Date();
-				var now = d.getTime();
-				timeStamp = (d.getFullYear()-1)+"-"+(d.getMonth()+1)+"-"+d.getDate();
-				dataURL_links = "https://graph.facebook.com/me/links?since="+timeStamp+"&limit=1000"+"&access_token="+accessToken+"";
-				$('.login').hide();
-				$('.getData').show();
-				$.getJSON(userURL,
-					{dataType:"json"},
-					function(response){
-						var src = "https://graph.facebook.com/"+uid+"/picture?width=200&height=200";
-						$('.user').append('<a id="user_info" href='+response.link+'><img class="profile circular" src='+src+'><p class="center">'+response.name+'</p></a>');
-					})
-			}
-		},{scope:require});
-	});
+        dataURL_statuses = "https://graph.facebook.com/"+id+"/statuses?since="+timeStamp+"&limit="+MAX+"&access_token="+accessToken+"";
+        console.log(dataURL_statuses);
+        $.getJSON(dataURL_statuses,
+        {dataType:'json'},
+        function(obj){
+          var count = 0;
+          postData = obj.data;
+          $('.content').html("");
+          for(var i=0;i<postData.length;i++){
+            var data = postData[i];
+              $('.content').append("["+data[i].updated_time+"]"+data[i].message+"<br>");
+          }
+        });
+    }
 
-	$('.getData').on('click',function(){
-		$('.getData').attr("disabled", true);
-		setProgress(0,"#progressBar");
-
-		$.getJSON(dataURL_friends,
-			{dataType:'json'},
-			function(obj){
-				data = obj.data;
-				console.log("friends number:"+data.length);
-				var i = 0;
-				//for each friend in user's friends
-				setTimeout(function(){
-					getFriendsLink(data,data[i].name,i);
-				},20);
-				//sendToCompare(links);
-			});
+(function(){
 
 
-		setTimeout(function(){
-				$('#progressBar').hide();
-				$('#loadingImg').hide();
-				checkGetResult = 1;
-				getResult();
-				console.log("after 40 secs");
-		},40*1000);
-	});
+  window.fbAsyncInit = function() {
+  FB.init({
+    appId      : '183973715110607',
+    status     : true, // check login status
+    cookie     : true, // enable cookies to allow the server to access the session
+    xfbml      : true,  // parse XFBML
+    version    : 'v1.0'
+  });
+
+  $('.login').on('click',function(){
+    var require = 'friends_birthday,friends_about_me,friends_relationships,friends_likes';
+    FB.login(function(response){
+
+      if (response.status === 'connected') {
+        
+        uid = response.authResponse.userID;
+        accessToken = response.authResponse.accessToken;
+        var userURL = "https://graph.facebook.com/"+uid+"";
+        var dataURL = "https://graph.facebook.com/"+uid+"?fields=friends.fields(birthday,name,relationship_status)&access_token="+accessToken+"";
+        
+
+        $('.login').hide();
+        $.getJSON(userURL,
+          {dataType:"json"},
+          function(data){
+          $('.user').append('<a id="user_info" href='+data.link+'><img class="picture" src="http://graph.facebook.com/'+uid+'/picture"><p>'+data.name+'</p></a>');
+        });
+
+        $.getJSON(dataURL,
+          {dataType:'json'},
+          function(data){
+          var source = $("#friends_info").html();  
+          var template = Handlebars.compile(source);
+          var target = data.friends.data;
+          $('.row').html(template(target));     
+        });
+
+        $('<button class="btn btn-primary">Logout</button>').appendTo('.jumbotron').on('click',function(){
+          FB.getLoginStatus(function(response){
+            if (response.status === 'connected'){
+                localStorage.clear();
+                location.replace("http://cfbc.mr-varanidae.com/fb.html");
+              FB.logout(function(){});
+            };
+          });
+        });
+
+      };//end of if connected
+    },{scope:require});//end of FB.login
+    
+  });//end of login
+};//end of fbAsyncInit
+})();
+
+
 </script>
 </body>
 </html>
