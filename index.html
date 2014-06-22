@@ -165,7 +165,7 @@ function getPost(id){
           $('.content').html("");
           for(var i=0;i<postData.length;i++){
             var data = postData[i];
-              $('.content').append("["+data[i].updated_time+"]"+data[i].message+"<br>");
+              $('.content').append("["+data.updated_time+"] "+data.message+"<br>");
           }
         });
     }
