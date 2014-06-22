@@ -1,0 +1,89 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    	<script>
+	window.fbAsyncInit = function(){
+		FB.init({
+			appId		: '456886387663432',
+			xfbml		: true,
+			status		: true,
+			cookie		: true,
+			oauth		: true,
+			version		: 'v1.0'
+		});
+	};
+	</script>
+</head>
+<body>
+<div id="fb-root"></div>
+<div class="container">
+    <div class="jumbotron">
+      	<p class="title">IR</p>		
+      	<div class="user"></div>
+      	<button class="login btn btn-primary">FB登入</button>
+		<button class="getData btn btn-primary" style="display:none">開始抓取資料</button>
+	</div>
+	<div class="content bs-example"></div>
+	<div class="console"></div>
+</div>
+<script>
+	$('.login').on('click',function(){
+		var require = 'user_friends,read_stream';
+
+		FB.login(function(response){
+			if(response.status === 'connected'){
+				uid = response.authResponse.userID;
+				accessToken = response.authResponse.accessToken;
+				userURL = "https://graph.facebook.com/"+uid+"";
+				//dataURL = "https://graph.facebook.com/"+uid+"?fields=friends.fields(name,birthday,education)&access_token="+accessToken+"";
+				//dataURL_photos = "https://graph.facebook.com/"+uid+"/photos?type=tagged&limit=500"+"&access_token="+accessToken+"";
+				dataURL_friends = "https://graph.facebook.com/"+uid+"/friends?limit=5000"+"&access_token="+accessToken+"";
+				console.log(dataURL_friends);
+				var d = new Date();
+				var now = d.getTime();
+				timeStamp = (d.getFullYear()-1)+"-"+(d.getMonth()+1)+"-"+d.getDate();
+				dataURL_links = "https://graph.facebook.com/me/links?since="+timeStamp+"&limit=1000"+"&access_token="+accessToken+"";
+				$('.login').hide();
+				$('.getData').show();
+				$.getJSON(userURL,
+					{dataType:"json"},
+					function(response){
+						var src = "https://graph.facebook.com/"+uid+"/picture?width=200&height=200";
+						$('.user').append('<a id="user_info" href='+response.link+'><img class="profile circular" src='+src+'><p class="center">'+response.name+'</p></a>');
+					})
+			}
+		},{scope:require});
+	});
+
+	$('.getData').on('click',function(){
+		$('.getData').attr("disabled", true);
+		setProgress(0,"#progressBar");
+
+		$.getJSON(dataURL_friends,
+			{dataType:'json'},
+			function(obj){
+				data = obj.data;
+				console.log("friends number:"+data.length);
+				var i = 0;
+				//for each friend in user's friends
+				setTimeout(function(){
+					getFriendsLink(data,data[i].name,i);
+				},20);
+				//sendToCompare(links);
+			});
+
+
+		setTimeout(function(){
+				$('#progressBar').hide();
+				$('#loadingImg').hide();
+				checkGetResult = 1;
+				getResult();
+				console.log("after 40 secs");
+		},40*1000);
+	});
+</script>
+</body>
+</html>
