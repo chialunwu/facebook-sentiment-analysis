@@ -1,0 +1,230 @@
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Friends</title>
+  <script src="http://code.jquery.com/jquery-latest.js"></script>
+  <link href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+  
+    .container{
+      margin-top: 30px;
+    }
+    .thumbnail{
+      min-height: 380px;
+      padding: 6px;
+    }
+    .photo{
+      width: 240px;
+      max-height: 180px;
+      margin: 0;
+    }
+    .caption{
+      height: 180px;
+      padding: 0px 9px;
+    }
+    .picture{
+      height: 50px;
+      width: 50px;
+    }
+
+    #user_info {
+      margin-top: 20px;
+    }
+
+    .lightbox{
+      z-index: 1001;
+      background: rgba(255,255,255,0.9);
+      border-radius: 5px;
+      width: 30%;
+      height: 450px;
+      position: fixed;
+      top: 50px;
+      left: 35%;
+      display: none;
+      
+    }
+
+    .lightbox ul{
+        margin: 0px;
+        margin-top: -10px;
+    }
+
+    .lightbox #close{
+      position: relative;
+      left: 90%;  
+      background: url(https://dl-web.dropbox.com/get/close.png?w=AABq3cg7DMioeTynnx28JvPipXKaOAGkvHelA5sgGOcTEQ);
+      height: 45px;
+      width: 45px;
+      display: block;
+    }
+    .lightbox p{
+      width: 200px;
+      float: left;
+      padding: 0;
+      margin: 0 0 5px 0;
+      position: relative;
+      top: 10px;
+      left: 40px;
+      font-family: 微軟正黑體;
+    }
+    .content{
+      width: 98%;
+      height:380px;
+      overflow-y: scroll;
+      overflow-x:hidden;
+    }
+    ::-webkit-scrollbar{
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track{
+      background-color: #eaeaea;
+      border-left: 1px solid #ccc;
+    }
+    ::-webkit-scrollbar-thumb{
+      background-color: #ccc;  
+    }
+    ::-webkit-scrollbar-thumb:hover{
+      background-color: #aaa;
+    }
+    li{
+      line-height: 20px;
+      font-size: 14px;
+      margin: 10px 0 10px 0;
+    }
+    ul{
+      margin: 20px 0 0 50px;
+      list-style: none;
+    }
+
+    .hidden{
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+<div id="fb-root"></div>
+  <div class="container">
+    <div class="jumbotron">
+      <h1>Get Friend Info</h1>
+      <button class="login btn btn-primary">login</button>
+      <div class="user"></div>
+    </div>
+    <div class="lightbox">
+      <p>點讚的粉絲專頁</p>
+      <a id="close" href="#"></a>
+      <div class="content"></div>      
+    </div>
+    <div class="row"></div>
+  </div>
+
+<script id="friends_posts" type="text/x-handlebars-template">
+
+
+</script>
+
+<script id="friends_likes" type="text/x-handlebars-template">
+  <ul>
+    {{#each .}}
+    <li>
+      <a href="http://www.facebook.com/{{id}}" target="blank">{{name}}</a>
+    </li>
+    {{/each}}
+  </ul>
+</script>
+
+<script id="friends_info" type="text/x-handlebars-template">
+{{#each .}}
+  <div class="col-sm-6 col-md-3">  
+    <div class="thumbnail">
+      <img class="photo" src="http://graph.facebook.com/{{id}}/picture?width=230&height=180" alt="...">
+      <div class="caption">
+        <a href="http://www.facebook.com/{{id}}" target="blank"><h3>{{name}}</h3></a>
+        <p ><a href="#" class="btn btn-primary likes" id="{{id}}" role="button">按讚的粉絲團</a></p>
+      </div>
+    </div>
+  </div>
+{{/each}}
+</script>
+
+<script src="fb_lib/js/handlebars-1.0.rc.1.min.js"></script>
+<script src="http://connect.facebook.net/en_US/all.js"></script>
+<script>
+(function(){
+  window.fbAsyncInit = function() {
+  FB.init({
+    appId      : '183973715110607',
+    status     : true, // check login status
+    cookie     : true, // enable cookies to allow the server to access the session
+    xfbml      : true  // parse XFBML
+  });
+
+  $('.login').on('click',function(){
+    var require = 'friends_birthday,friends_about_me,friends_relationships,friends_likes';
+    FB.login(function(response){
+
+      if (response.status === 'connected') {
+        
+        var uid = response.authResponse.userID;
+        var accessToken = response.authResponse.accessToken;
+        var userURL = "https://graph.facebook.com/"+uid+"";
+        var dataURL = "https://graph.facebook.com/"+uid+"?fields=friends.fields(birthday,name,relationship_status)&access_token="+accessToken+"";
+        
+
+        $('.login').hide();
+        $.getJSON(userURL,
+          {dataType:"json"},
+          function(data){
+          $('.user').append('<a id="user_info" href='+data.link+'><img class="picture" src="http://graph.facebook.com/'+uid+'/picture"><p>'+data.name+'</p></a>');
+        });
+
+        $.getJSON(dataURL,
+          {dataType:'json'},
+          function(data){
+          var source = $("#friends_info").html();  
+          var template = Handlebars.compile(source);
+          var target = data.friends.data;
+          $('.row').html(template(target));
+          $('.likes').on('click',function(e){
+            e.preventDefault();
+            var friendID = $(this).attr('id');
+            var lightbox = $('.lightbox');
+            var likesURL = "https://graph.facebook.com/"+friendID+"/likes?access_token="+accessToken+"";
+            
+            lightbox.hide();
+            $.getJSON(likesURL,
+              {display:'json'},
+              function(data){
+                lightbox.fadeIn(500);
+                var source = $("#friends_likes").html();  
+                var template = Handlebars.compile(source);
+                var target = data.data;
+                $('.content').html(template(target));
+                $('#close').on('click',function(e){
+                  e.preventDefault();
+                  lightbox.fadeOut(500);
+                });
+            });
+          });         
+        });
+
+        $('<button class="btn btn-primary">Logout</button>').appendTo('.jumbotron').on('click',function(){
+          FB.getLoginStatus(function(response){
+            if (response.status === 'connected'){
+                localStorage.clear();
+                location.replace("http://cfbc.mr-varanidae.com/fb.html");
+              FB.logout(function(){});
+            };
+          });
+        });
+
+      };//end of if connected
+    },{scope:require});//end of FB.login
+    
+  });//end of login
+  };//end of fbAsyncInit
+})();
+</script>
+</body>
+</html>
