@@ -7,7 +7,7 @@
 import re
 import os
 import sys
-import numpy
+import pickle
 import nltk.classify.util
 from nltk.classify import NaiveBayesClassifier
 
@@ -22,6 +22,11 @@ def read_list(path,List):
     with open(path,'r') as f:
         for e in f:
             List.append(e.strip())
+
+def save_classifier(classifier, path):
+   f = open(path, 'wb')
+   pickle.dump(classifier, f)
+   f.close()
 
 def word_feats(words):
     return dict([(word, True) for word in words])
@@ -65,16 +70,14 @@ poscutoff = len(pos_feats)*3/4
 train_feats = neg_feats[:negcutoff] + pos_feats[:poscutoff]
 testfeats = neg_feats[negcutoff:] + pos_feats[poscutoff:]
 
-print 'train on %d instances, test on %d instances' % (len(train_feats), len(testfeats))
+print 'Train on %d instances, test on %d instances' % (len(train_feats), len(testfeats))
 
 classifier = NaiveBayesClassifier.train(train_feats)
 
-print 'accuracy:', nltk.classify.util.accuracy(classifier, testfeats)
-classifier.show_most_informative_features(40)
+print 'Accuracy:', nltk.classify.util.accuracy(classifier, testfeats)
 
+save_classifier(classifier,'Naive.classifier')
 
-print "Done."
-
-
+print 'Save classifier in \'Naive.classifier\''
 #sr = sorted(vec.items(), key=lambda x:x[1],reverse=True)
 
