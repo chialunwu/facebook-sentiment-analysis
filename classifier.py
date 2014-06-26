@@ -7,6 +7,10 @@
 import re
 import os
 import sys
+import numpy
+import nltk.classify.util
+from nltk.classify import NaiveBayesClassifier
+
 
 def checkstop(word):
     if word in stop:
@@ -26,7 +30,7 @@ def getWords(File):    # vec : []
     f = open(File,'r')
     words = []
     for line in f:
-            if '(' not in line:	     # Empty line
+            if '(' not in line or "¡¯" in line or "ª©³W" in line or "---" in line or "§R°£" in line or "JPTT" in line:
                     continue
             line = line.replace('¡@','\t').strip().split('\t')
             for e in line:
@@ -52,9 +56,24 @@ neg_files = os.listdir(neg_dir)
 pos_vec = []
 neg_vec = []
 
-print os.path.join(pos_dir,pos_files[0])
-w = getWords(os.path.join(pos_dir,pos_files[0]))
-   
+pos_feats = [(word_feats(getWords(os.path.join(pos_dir,f))), 'pos') for f in pos_files]
+neg_feats = [(word_feats(getWords(os.path.join(neg_dir,f))), 'neg') for f in neg_files]
+
+negcutoff = len(neg_feats)*3/4
+poscutoff = len(pos_feats)*3/4
+ 
+train_feats = neg_feats[:negcutoff] + pos_feats[:poscutoff]
+testfeats = neg_feats[negcutoff:] + pos_feats[poscutoff:]
+
+print 'train on %d instances, test on %d instances' % (len(train_feats), len(testfeats))
+
+classifier = NaiveBayesClassifier.train(train_feats)
+
+print 'accuracy:', nltk.classify.util.accuracy(classifier, testfeats)
+classifier.show_most_informative_features(40)
+
+
+print "Done."
 
 
 #sr = sorted(vec.items(), key=lambda x:x[1],reverse=True)
