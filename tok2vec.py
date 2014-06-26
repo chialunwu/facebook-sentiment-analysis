@@ -19,42 +19,43 @@ def read_list(path,List):
         for e in f:
             List.append(e.strip())
 
+def word_feats(words):
+    return dict([(word, True) for word in words])
 
-
-
+def getWords(File):    # vec : []
+    f = open(File,'r')
+    words = []
+    for line in f:
+            if '(' not in line:	     # Empty line
+                    continue
+            line = line.replace('¡@','\t').strip().split('\t')
+            for e in line:
+                    r = re.split('(\(\w+\))', e)
+                    try:
+                        if checkstop(r[0]) == False:
+                                words.append(r[0])
+                    except:
+                        pass
+    return words
+ 
 stop = []
 pos = []
 neg = []
 read_list('stopword.list',stop)
 read_list('ntusd-positive.txt',pos)
 
-dir = sys.argv[1]
-files = os.listdir(dir)
-vec = {}
+pos_dir = sys.argv[1]
+neg_dir = sys.argv[2]
 
-for file in files:
-	file = os.path.join(dir,file)
-	f = open(file,'r')
-	for line in f:
-		if '(' not in line:	     # Empty line
-			continue
-		line = line.replace('¡@','\t').strip().split('\t')
-		for e in line:
-			r = re.split('(\(\w+\))', e)
-                        try:
-			    if checkstop(r[0]) == False:
-                                if r[0] not in vec:
-                                    vec[r[0]] = 1
-                                else:
-                                    vec[r[0]] +=1
-                        except:
-                            pass
+pos_files = os.listdir(pos_dir)
+neg_files = os.listdir(neg_dir)
+pos_vec = []
+neg_vec = []
 
-sr = sorted(vec.items(), key=lambda x:x[1],reverse=True)
-c = 0
-for e in vec:
-    if e
+print os.path.join(pos_dir,pos_files[0])
+w = getWords(os.path.join(pos_dir,pos_files[0]))
+   
 
 
-print len(vec)
+#sr = sorted(vec.items(), key=lambda x:x[1],reverse=True)
 
