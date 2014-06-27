@@ -20,6 +20,7 @@ img.center{
   background: url(http://link-to-your/image.jpg) no-repeat;
 }
 
+
 p.title{
   display: inline;
   font-weight: bolder ;
@@ -37,7 +38,9 @@ p.rank{
 p.highlight{
   color: 428bca;
 }
-
+.center{
+	margin:0 auto;
+}
 hr{
   color: 211fbd;
 }
@@ -118,11 +121,11 @@ hr{
       left: 40px;
       font-family: 微軟正黑體;
     }
-    .content{
+    .scroll-content{
       width: 98%;
       overflow-y: scroll;
       overflow-x:hidden;
-      height: 300px;
+      height: 60%;
     }
     ::-webkit-scrollbar{
       width: 5px;

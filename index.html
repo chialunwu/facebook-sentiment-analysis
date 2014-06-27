@@ -8,6 +8,7 @@
   <link href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/css/bootstrap.min.css" rel="stylesheet">
   <link href="web_lib/css/bootstrap.min.css" rel="stylesheet">
   <link href="web_lib/css/style.css" rel="stylesheet">
+  <link href="web_lib/css/float.css" rel="stylesheet">
 </head>
 
 <body>
@@ -16,9 +17,18 @@
     <div class="jumbotron">
       <h3>分析好友貼文情緒</h3>
       <button class="login btn btn-primary">以Facebook登入</button>
+      <br> 
+      <div class="classifier btn-group col-sm-9" data-toggle="buttons" style="display:none">
+      	<label class="btn btn-primary active">
+      		<input type="radio" name="options" id="nb" value="1" checked onSelect="select()">Naive Bayes
+      	</label>
+      	<label class="btn btn-primary">
+      		<input type="radio" name="options" id="svm" value="2">SVM
+      	</label>
+      </div>
     </div>
-    <div class="search-group" style="display:none">    
-	<input type="text" class="form-control search-bar" id="searchbox" placeholder="Search for friends." >
+      <div class="search-group" style="display:none">    
+	<input type="text" class="form-control search-bar" name="search-bar" id="search-bar" placeholder="Search for friends." >
 	<div class="input-group-btn">
 		<!--<button class="searchButton btn btn-default" type="button"><i class="glyphicon glyphicon-search"></i></button>-->
 	</div>
@@ -26,7 +36,7 @@
      </div>
      <br>
      <div class="log"></div>
-    <div class="row"></div>
+    <div class="row scroll-content"></div>
   </div>
   <!-- Large modal -->
     <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -80,11 +90,13 @@
 <script src="web_lib/js/handlebars-1.0.rc.1.min.js"></script>
 <script src="http://connect.facebook.net/en_US/all.js"></script>
 <script>
-        var MAX = 25;
+        var MAX = 25; // number of posts
         var accessToken;
         var uid;
-	var friend = [];
-	var post = [];
+	var friend = []; // store friends info
+	var post = []; // store posts data
+	var type; // the type of classifiers  1: N.B  2: SVM
+
 /**
   *   reset post data each time the getPost is active.
   */
@@ -93,7 +105,7 @@ function init(){
 	$('.emotion-bar').html("");	
 	countFlag=0;
 	pushFlag=0;
-	  post = [];
+	post = [];
 }
 /**
   *   Create a FB Graph Url to get data
@@ -101,7 +113,10 @@ function init(){
   */
 function getPost(id){
 	init();	
-
+	
+	type = $('input[name=options]:checked').val();
+	
+	console.log("type:"+type);	
         var d = new Date();
         var now = d.getTime();
         timeStamp = (d.getFullYear()-1)+"-"+(d.getMonth()+1)+"-"+d.getDate();
@@ -144,7 +159,7 @@ function sendToToken(data,count,id){
                type:'POST',
 	       data: {
 	       		data:data[count].message,
-			method: "1"
+			type: type
 		},
            error: function(xhr) {
               console.log("error:"+xhr);
@@ -226,6 +241,7 @@ function printBar(pos,neg){
 function printContent(i){
     var data = post[i];
     var label;
+    console.log("pos:"+data.pos+" neg:"+data.neg);
     console.log("post:"+i);
     if(data != "undefined"){
 	$('.content').append("<p>"+data.message+"<br></p>");
@@ -234,6 +250,8 @@ function printContent(i){
 	  	label = 'label-danger';
 	  else
 	    	label = 'label-success';
+
+	value = 
     	$('.content').append("<span class='label "+label+"'>"+value.toFixed(2)+"</span><hr>");
     }
 
@@ -266,6 +284,7 @@ function printContent(i){
         
 
         $('.login').hide();
+	$('.classifier').show();
 	$('.search-group').show();
         /*
         $.getJSON(userURL,
@@ -288,20 +307,21 @@ function printContent(i){
 			id:target[i]['id']
 		  });
 	  }
-          $('.row').html(template(target));     
+          $('.row').html(template(target));
+	  console.log("row running");
         });
 
       };//end of if connected
     },{scope:require});//end of FB.login
     
   });//end of login
-
   $('.search-bar').keyup(function(){
-	  obj = document.getElementById('searchbox');
+	  obj = document.getElementById('search-bar');
 		
 	  var temp = [];
           var source = $("#friends_info").html();  
           var template = Handlebars.compile(source);
+	  
 	  for(var i=0;i<friend.length;i++){
 		var objRE = new RegExp(obj.value,"gi");
 		if(objRE.test(friend[i]['name'])){
@@ -313,6 +333,7 @@ function printContent(i){
 		}
 	  }
           $('.row').html(template(temp));     
+	  
   });
 };//end of fbAsyncInit
 })();
