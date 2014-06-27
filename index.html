@@ -251,10 +251,8 @@ function printContent(i){
 	  else
 	    	label = 'label-success';
 
-	value = value.toFixed(2);
-	value *=100;
-	value = value +"%";
-	$('.content').append("<div align='center'><h4><span class='label "+label+"'>"+value+"</span></h4></div><hr>");
+	value = Math.round(value*100);
+	$('.content').append("<div align='center'><h4><span class='label "+label+"'>"+value+"%"+"</span></h4></div><hr>");
     }
 
 
