@@ -165,8 +165,8 @@ function sendToToken(data,count,id){
 			post.push({
 				id:data[count].id,	
 				message:data[count].message,
-				pos:score.pos,
-				neg:score.neg
+				pos:score.pos.toFixed(2),
+				neg:score.neg.toFixed(2)
 			});
 			pushFlag++;
 	   	}
@@ -196,7 +196,7 @@ function getScore(length){
 	}
 	pos /=length;
 	neg /=length;
-	printBar(pos,neg);
+	printBar(pos.toFixed(2),neg.toFixed(2));
 	console.log("pos:"+pos+" neg:"+neg);
 }
 function printBar(pos,neg){
