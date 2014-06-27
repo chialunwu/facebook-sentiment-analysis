@@ -47,7 +47,7 @@
 		        	<h4 class="modal-title" id="myModalLabel"></h4>
 				<div class="emotion-bar"></div>
 			</div>
-	      		<div class="modal-body content">
+	      		<div class="modal-body scroll-content content">
 	      		</div>
 		      	<div class="modal-footer">
 		      		<button type="button" class="btn btn-default" data-dismiss="modal" onClick="myclose()">Close</button>
@@ -251,8 +251,10 @@ function printContent(i){
 	  else
 	    	label = 'label-success';
 
-	value = 
-    	$('.content').append("<span class='label "+label+"'>"+value.toFixed(2)+"</span><hr>");
+	value = value.toFixed(2);
+	value *=100;
+	value = value +"%";
+	$('.content').append("<div align='center'><h4><span class='label "+label+"'>"+value+"</span></h4></div><hr>");
     }
 
 
