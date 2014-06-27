@@ -1,0 +1,144 @@
+body{
+  font-family:微軟正黑體;
+}
+img.center{
+  display: block;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.user{
+      height: 240px;
+      padding: 6px;
+      float:right;
+}
+
+.circular {
+  border-radius: 150px;
+  -webkit-border-radius: 150px;
+  -moz-border-radius: 150px;
+  background: url(http://link-to-your/image.jpg) no-repeat;
+}
+
+p.title{
+  display: inline;
+  font-weight: bolder ;
+  font-size: 30px;
+}
+
+h3,p.center{
+  text-align: center;
+  margin-bottom: 0px;
+}
+p.rank{
+  text-align: center;
+  font-size: 16px;
+}
+p.highlight{
+  color: 428bca;
+}
+
+    .button{
+      padding: 12px;
+    }
+
+    .imgFrame{
+      width: 240px;
+      height: 170px;
+    }
+
+    .profile{
+        width: 100px;
+        height: 100px;
+        margin: 0;
+    }
+    
+    .container{
+      margin-top: 30px;
+    }
+    .thumbnail{
+      height: 300px;
+      padding: 6px;
+    }
+    .photo{
+      max-width: 240px;
+      max-height: 180px;
+      margin: 0;
+    }
+    .caption{
+      height: 240px;
+      padding: 0px 9px;
+    }
+    .picture{
+      height: 50px;
+      width: 50px;
+    }
+
+    #user_info {
+      margin-top: 20px;
+    }
+
+    .lightbox{
+      z-index: 1001;
+      background: rgba(255,255,255,0.9);
+      border-radius: 5px;
+      width: 30%;
+      height: 450px;
+      position: fixed;
+      top: 50px;
+      left: 35%;
+      display: none;
+      
+    }
+
+    .lightbox ul{
+        margin: 0px;
+        margin-top: -10px;
+    }
+
+    .lightbox #close{
+      position: relative;
+      left: 90%;  
+      background: url(https://dl-web.dropbox.com/get/close.png?w=AABq3cg7DMioeTynnx28JvPipXKaOAGkvHelA5sgGOcTEQ);
+      height: 45px;
+      width: 45px;
+      display: block;
+    }
+    .lightbox p{
+      width: 200px;
+      float: left;
+      padding: 0;
+      margin: 0 0 5px 0;
+      position: relative;
+      top: 10px;
+      left: 40px;
+      font-family: 微軟正黑體;
+    }
+    .content{
+      width: 98%;
+      overflow-y: scroll;
+      overflow-x:hidden;
+      height: 300px;
+    }
+    ::-webkit-scrollbar{
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track{
+      background-color: #eaeaea;
+      border-left: 1px solid #ccc;
+    }
+    ::-webkit-scrollbar-thumb{
+      background-color: #ccc;  
+    }
+    ::-webkit-scrollbar-thumb:hover{
+      background-color: #aaa;
+    }
+    li{
+      line-height: 20px;
+      font-size: 14px;
+      margin: 10px 0 10px 0;
+    }
+    ul{
+      margin: 20px 0 0 50px;
+      list-style: none;
+    }

@@ -4,116 +4,47 @@
   <meta charset="utf-8">
   <title>Friends</title>
   <script src="http://code.jquery.com/jquery-latest.js"></script>
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
   <link href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-  
-    .container{
-      margin-top: 30px;
-    }
-    .thumbnail{
-      min-height: 380px;
-      padding: 6px;
-    }
-    .photo{
-      width: 240px;
-      max-height: 180px;
-      margin: 0;
-    }
-    .caption{
-      height: 180px;
-      padding: 0px 9px;
-    }
-    .picture{
-      height: 50px;
-      width: 50px;
-    }
-
-    #user_info {
-      margin-top: 20px;
-    }
-
-    .lightbox{
-      z-index: 1001;
-      background: rgba(255,255,255,0.9);
-      border-radius: 5px;
-      width: 30%;
-      height: 450px;
-      position: fixed;
-      top: 50px;
-      left: 35%;
-      display: none;
-      
-    }
-
-    .lightbox ul{
-        margin: 0px;
-        margin-top: -10px;
-    }
-
-    .lightbox #close{
-      position: relative;
-      left: 90%;  
-      background: url(https://dl-web.dropbox.com/get/close.png?w=AABq3cg7DMioeTynnx28JvPipXKaOAGkvHelA5sgGOcTEQ);
-      height: 45px;
-      width: 45px;
-      display: block;
-    }
-    .lightbox p{
-      width: 200px;
-      float: left;
-      padding: 0;
-      margin: 0 0 5px 0;
-      position: relative;
-      top: 10px;
-      left: 40px;
-      font-family: 微軟正黑體;
-    }
-    .content{
-      width: 98%;
-      height:380px;
-      overflow-y: scroll;
-      overflow-x:hidden;
-    }
-    ::-webkit-scrollbar{
-      width: 5px;
-    }
-    ::-webkit-scrollbar-track{
-      background-color: #eaeaea;
-      border-left: 1px solid #ccc;
-    }
-    ::-webkit-scrollbar-thumb{
-      background-color: #ccc;  
-    }
-    ::-webkit-scrollbar-thumb:hover{
-      background-color: #aaa;
-    }
-    li{
-      line-height: 20px;
-      font-size: 14px;
-      margin: 10px 0 10px 0;
-    }
-    ul{
-      margin: 20px 0 0 50px;
-      list-style: none;
-    }
-
-    .hidden{
-      display: none;
-    }
-  </style>
+  <link href="web_lib/css/bootstrap.min.css" rel="stylesheet">
+  <link href="web_lib/css/style.css" rel="stylesheet">
 </head>
 
 <body>
 <div id="fb-root"></div>
   <div class="container">
     <div class="jumbotron">
-      <h1>Get Friend Info</h1>
-      <button class="login btn btn-primary">login</button>
-      <div class="user"></div>
+      <h3>分析好友貼文情緒</h3>
+      <button class="login btn btn-primary">以Facebook登入</button>
     </div>
-      <div class="content"></div>
+    <div class="search-group" style="display:none">    
+	<input type="text" class="form-control search-bar" id="searchbox" placeholder="Search for friends." >
+	<div class="input-group-btn">
+		<!--<button class="searchButton btn btn-default" type="button"><i class="glyphicon glyphicon-search"></i></button>-->
+	</div>
+	<!--	<button type="button"  class="searchButton btn btn-default">Search</button>-->
+     </div>
+     <br>
+     <div class="log"></div>
     <div class="row"></div>
   </div>
+  <!-- Large modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+	      <div class="modal-content">
+	        	<div class="modal-header">
+		        	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        	<h4 class="modal-title" id="myModalLabel"></h4>
+				<div class="emotion-bar"></div>
+			</div>
+	      		<div class="modal-body content">
+	      		</div>
+		      	<div class="modal-footer">
+		      		<button type="button" class="btn btn-default" data-dismiss="modal" onClick="myclose()">Close</button>
+  		    	</div>
+        	</div>
+	</div>
+   </div>
 
 <script id="friends_posts" type="text/x-handlebars-template">
 
@@ -137,45 +68,172 @@
       <img class="photo" src="http://graph.facebook.com/{{id}}/picture?width=230&height=180" alt="...">
       <div class="caption">
         <a href="http://www.facebook.com/{{id}}" target="blank"><h3>{{name}}</h3></a>
-        <p ><a href="#" class="btn btn-primary postButton" id="{{id}}" role="button" onClick="getPost(id)">檢視貼文</a></p>
+	<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal" id="{{id}}" onClick="getPost(id)">
+    	分析
+    	</button>
       </div>
     </div>
   </div>
 {{/each}}
 </script>
 
-<script src="fb_lib/js/handlebars-1.0.rc.1.min.js"></script>
+<script src="web_lib/js/handlebars-1.0.rc.1.min.js"></script>
 <script src="http://connect.facebook.net/en_US/all.js"></script>
 <script>
-        var MAX = 1000;
+        var MAX = 25;
         var accessToken;
         var uid;
+	var friend = [];
+	var post = [];
+/**
+  *   reset post data each time the getPost is active.
+  */
+function init(){
+	$('.content').html('<img class="center" id="loadingImg" src="loading.gif" width="400" >');
+	$('.emotion-bar').html();	
+	countFlag=0;
+	pushFlag=0;
+	  post = [];
+}
+/**
+  *   Create a FB Graph Url to get data
+  *   and send these to CKIPClient(中研院斷詞系統)
+  */
 function getPost(id){
+	init();	
+
         var d = new Date();
         var now = d.getTime();
         timeStamp = (d.getFullYear()-1)+"-"+(d.getMonth()+1)+"-"+d.getDate();
 
         dataURL_statuses = "https://graph.facebook.com/"+id+"/statuses?since="+timeStamp+"&limit="+MAX+"&access_token="+accessToken+"";
         console.log(dataURL_statuses);
+
         $.getJSON(dataURL_statuses,
         {dataType:'json'},
         function(obj){
           var count = 0;
           postData = obj.data;
-          $('.content').html("");
-          for(var i=0;i<postData.length;i++){
-            var data = postData[i];
-              $('.content').append("["+data.updated_time+"] "+data.message+"<br>");
-          }
+
+          sendToToken(postData,count);
         });
     }
+/**
+  * tokenHandler is the interface between js and CKIPClient and written in php
+  * main 
+  */
+var countFlag = 0;
+var pushFlag = 0;
+function myclose(){
+	console.log("close");
+}
+function sendToToken(data,count,id){
+    //if(friend_name == 'Angela Lee' || friend_name == 'Jasmine Lin')
+    //  console.log(friend_name+":"+links);
+              setTimeout(function(){
+                  if(count+1<data.length)
+                      sendToToken(data,count+1);
+                  },"200");
+    $.ajax({
+           url: 'tokenHandler.php',
+           cache: false,
+           dataType: 'text',
+               type:'POST',
+           data: "&data=" + data[count].message,
+           error: function(xhr) {
+              console.log("error:"+xhr);
+		countFlag++;
+		console.log(countFlag+" "+data.length);
+		if(countFlag>=data.length){
+			console.log(post);
+			$('.content').html("");
+			for(var i=0;i<pushFlag;i++){
+				printContent(i);
+			}
+			getScore(pushFlag);
+			countFlag=0;
+		}
+           },
+           success: function(response) {
+                //console.log("[response]:\n"+response);
+                //printContent(data,count,response);
+	   	if(response.indexOf("Warning") == -1 && response.indexOf("Notice")== -1){ // no warning {
+	   var score = JSON.parse(response);
+			post.push({
+				id:data[count].id,	
+				message:data[count].message,
+				pos:score.pos,
+				neg:score.neg
+			});
+			pushFlag++;
+	   	}
+
+		countFlag++;
+		console.log(countFlag+" "+data.length);
+		if(countFlag>=data.length){
+			console.log(post);
+			$('.content').html("");
+			for(var i=0;i<pushFlag;i++){
+				printContent(i);
+			}
+			getScore(pushFlag);
+			countFlag=0;
+		}
+           }
+     });
+  }
+function getScore(length){
+	console.log(length);
+	var pos = 0,neg = 0;
+	for(var i=0;i<length;i++){
+		if(post[i].pos!=-1 || post[i].pos!="undefined")
+			pos += post[i].pos;
+		if(post[i].neg!=-1 || post[i].neg!="undefined")
+			neg += post[i].neg;
+	}
+	pos /=length;
+	neg /=length;
+	printBar(pos,neg);
+	console.log("pos:"+pos+" neg:"+neg);
+}
+function printBar(pos,neg){
+	var bar1,bar2;	
+	if(pos>=neg){
+		bar1 = 50;
+		bar2 = 50 *(pos-neg);
+	}else{
+		bar2 = 50 *(neg-pos);
+		bar1 = 50 - bar2;
+	}
+
+	$('#myModalLabel').html("情緒指數");
+	var string = "<div class='progress'>";
+	string +=  '<div class="progress-bar progress-bar-none" style="width: '+bar1+'%"></div>';
+	if(neg>pos)
+		string +=  '<div class="progress-bar progress-bar-danger progress-bar-striped" style="width: '+bar2+'%"></div>';
+	else
+		string +=  '<div class="progress-bar progress-bar-success progress-bar-striped"  style="width: '+bar2+'%"></div>';
+	string += '</div>';
+	string += '</div>';
+	$('.emotion-bar').html(string);
+}
+function printContent(i){
+    var data = post[i];
+    console.log("post:"+i);
+    if(data != "undefined"){
+	if(data.message !="undefined");
+	    $('.content').append(data.message+"<br>");
+    }
+    $('.content').append("<p class='highlight'>"+data.pos+" "+data.neg+"</p><hr>");
+
+}
 
 (function(){
 
 
   window.fbAsyncInit = function() {
   FB.init({
-    appId      : '183973715110607',
+    appId      : '456886387663432',
     status     : true, // check login status
     cookie     : true, // enable cookies to allow the server to access the session
     xfbml      : true,  // parse XFBML
@@ -183,7 +241,7 @@ function getPost(id){
   });
 
   $('.login').on('click',function(){
-    var require = 'friends_birthday,friends_about_me,friends_relationships,friends_likes';
+    var require = 'user_friends,read_stream';
     FB.login(function(response){
 
       if (response.status === 'connected') {
@@ -195,35 +253,54 @@ function getPost(id){
         
 
         $('.login').hide();
+	$('.search-group').show();
+        /*
         $.getJSON(userURL,
           {dataType:"json"},
           function(data){
           $('.user').append('<a id="user_info" href='+data.link+'><img class="picture" src="http://graph.facebook.com/'+uid+'/picture"><p>'+data.name+'</p></a>');
         });
+        */
 
         $.getJSON(dataURL,
           {dataType:'json'},
           function(data){
+	  
           var source = $("#friends_info").html();  
           var template = Handlebars.compile(source);
           var target = data.friends.data;
+	  for(var i=0;i<target.length;i++){
+		  friend.push({
+			name:target[i]['name'],
+			id:target[i]['id']
+		  });
+	  }
           $('.row').html(template(target));     
-        });
-
-        $('<button class="btn btn-primary">Logout</button>').appendTo('.jumbotron').on('click',function(){
-          FB.getLoginStatus(function(response){
-            if (response.status === 'connected'){
-                localStorage.clear();
-                location.replace("http://cfbc.mr-varanidae.com/fb.html");
-              FB.logout(function(){});
-            };
-          });
         });
 
       };//end of if connected
     },{scope:require});//end of FB.login
     
   });//end of login
+
+  $('.search-bar').keyup(function(){
+	  obj = document.getElementById('searchbox');
+		
+	  var temp = [];
+          var source = $("#friends_info").html();  
+          var template = Handlebars.compile(source);
+	  for(var i=0;i<friend.length;i++){
+		var objRE = new RegExp(obj.value,"gi");
+		if(objRE.test(friend[i]['name'])){
+			//console.log(obj.value+" "+target[i]['name']);	
+		temp.push({
+			name:friend[i]['name'],
+			id:friend[i]['id']
+			});
+		}
+	  }
+          $('.row').html(template(temp));     
+  });
 };//end of fbAsyncInit
 })();
 
