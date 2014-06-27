@@ -142,7 +142,10 @@ function sendToToken(data,count,id){
            cache: false,
            dataType: 'text',
                type:'POST',
-           data: "&data=" + data[count].message,
+	       data: {
+	       		data:data[count].message,
+			method: "1"
+		},
            error: function(xhr) {
               console.log("error:"+xhr);
 		countFlag++;
@@ -222,12 +225,19 @@ function printBar(pos,neg){
 }
 function printContent(i){
     var data = post[i];
+    var label;
     console.log("post:"+i);
     if(data != "undefined"){
-	if(data.message !="undefined");
-	    $('.content').append(data.message+"<br>");
+	$('.content').append("<p>"+data.message+"<br></p>");
+	var value = data.pos - data.neg;
+  	if(data.neg>data.pos) //red
+	  	label = 'label-danger';
+	  else
+	    	label = 'label-success';
+    	$('.content').append("<span class='label "+label+"'>"+value.toFixed(2)+"</span><hr>");
     }
-    $('.content').append("<p class='highlight'>"+data.pos.toFixed(2)+" "+data.neg.toFixed(2)+"</p><hr>");
+
+
 
 }
 
