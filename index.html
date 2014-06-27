@@ -165,8 +165,8 @@ function sendToToken(data,count,id){
 			post.push({
 				id:data[count].id,	
 				message:data[count].message,
-				pos:score.pos.toFixed(2),
-				neg:score.neg.toFixed(2)
+				pos:score.pos,
+				neg:score.neg
 			});
 			pushFlag++;
 	   	}
@@ -196,7 +196,7 @@ function getScore(length){
 	}
 	pos /=length;
 	neg /=length;
-	printBar(pos.toFixed(2),neg.toFixed(2));
+	printBar(pos,neg);
 	console.log("pos:"+pos+" neg:"+neg);
 }
 function printBar(pos,neg){
@@ -227,7 +227,7 @@ function printContent(i){
 	if(data.message !="undefined");
 	    $('.content').append(data.message+"<br>");
     }
-    $('.content').append("<p class='highlight'>"+data.pos+" "+data.neg+"</p><hr>");
+    $('.content').append("<p class='highlight'>"+data.pos.toFixed(2)+" "+data.neg.toFixed(2)+"</p><hr>");
 
 }
 
