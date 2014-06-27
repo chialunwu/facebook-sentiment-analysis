@@ -3,14 +3,18 @@
 # Description: transform the results in tokenized/[happy] to VSM, for SVM
 # Author: Leo Wu
 # Date: 2014.06.23
+# Example : python svm_train.py dataset/pos dataset/neg -m bin -c 0.9 -o classifier -d
 
 import re
 import os
 import sys
 import pickle
 import json
-#import nltk.classify.util
 from libsvm.python.svmutil import *
+import logging
+
+logger = logging.getLogger( __name__  )
+logging.basicConfig(filename="log", level=logging.DEBUG)
 
 def checkstop(word):
     if word in stop:
@@ -23,11 +27,6 @@ def read_list(path,List):
         for e in f:
             List.append(e.strip())
 
-def save_classifier(classifier, path):
-   f = open(path, 'wb')
-   pickle.dump(classifier, f)
-   f.close()
-
 dic = {}
 def wordindex(word):
     word = word.decode('big5')
@@ -35,8 +34,21 @@ def wordindex(word):
         dic[word] = len(dic)
     return dic[word]
 
-def word_feats(words):
-    return dict([(wordindex(word), 1) for word in words])
+def word_feats(words, method):
+    if method == 'bin':  # binary
+        return dict([(wordindex(word), 1) for word in words])
+    elif method == 'mul': # multiple
+        d = {}
+        for w in words:
+            w = wordindex(w)
+            if w in d:
+                d[w] += 1
+            else:
+                d[w] = 1
+        return d
+    elif method == 'tf-idf':
+        pass
+
 
 def getWords(File):    # vec : []
     f = open(File,'r')
@@ -54,53 +66,62 @@ def getWords(File):    # vec : []
                         pass
     return words
  
-def save_dic():
-    f = open('SVM.dictionary','w')
+def save_dic(d):
+    f = open(os.path.join(d,'SVM.dictionary'),'w')
     f.write(json.dumps(dic))
     f.close()
 
-stop = []
-pos = []
-neg = []
-read_list('lib/stopword.list',stop)
-#read_list('ntusd-positive.txt',pos)
 
-pos_dir = sys.argv[1]
-neg_dir = sys.argv[2]
+if __name__ == '__main__':
+    stop = []
+    pos = []
+    neg = []
+    read_list('lib/stopword.list',stop)
+    #read_list('ntusd-positive.txt',pos)
 
-pos_files = os.listdir(pos_dir)
-neg_files = os.listdir(neg_dir)
+    pos_dir = sys.argv[1]
+    neg_dir = sys.argv[2]
+    method = sys.argv[sys.argv.index('-m')+1]
+    cutoff = float(sys.argv[sys.argv.index('-c')+1])
+    out_dir = sys.argv[sys.argv.index('-o')+1]
 
-pos_vec = []
-neg_vec = []
+    logger.info('SVM- method:{0} cutoff:{1}'.format(method,cutoff))
 
-pos_feats = [word_feats(getWords(os.path.join(pos_dir,f))) for f in pos_files]
-print pos_feats[2]
-neg_feats = [word_feats(getWords(os.path.join(neg_dir,f))) for f in neg_files]
+    pos_files = os.listdir(pos_dir)
+    neg_files = os.listdir(neg_dir)
 
-save_dic()
+    pos_feats = [word_feats(getWords(os.path.join(pos_dir,f)), method) for f in pos_files]
+    neg_feats = [word_feats(getWords(os.path.join(neg_dir,f)), method) for f in neg_files]
 
-negcutoff = len(neg_feats)*3/4
-poscutoff = len(pos_feats)*3/4
- 
-train_feats = neg_feats[:negcutoff] + pos_feats[:poscutoff]
-test_feats = neg_feats[negcutoff:] + pos_feats[poscutoff:]
+    negcutoff = int(len(neg_feats)*cutoff)
+    poscutoff = int(len(pos_feats)*cutoff)
+     
+    train_feats = neg_feats[:negcutoff] + pos_feats[:poscutoff]
+    test_feats = neg_feats[negcutoff:] + pos_feats[poscutoff:]
 
-print 'Train on %d instances, test on %d instances' % (len(train_feats), len(test_feats))
+    s = 'Train on %d instances, test on %d instances' % (len(train_feats), len(test_feats))
+    print s    
+    logger.info(s)
 
-train_signs = [-1 for i in range(negcutoff)] + [1 for i in range(poscutoff)]
-test_signs = [-1 for i in range(len(neg_feats) - negcutoff)] + [1 for i in range(len(pos_feats) - poscutoff)]
+    train_signs = [-1 for i in range(negcutoff)] + [1 for i in range(poscutoff)]
+    test_signs = [-1 for i in range(len(neg_feats) - negcutoff)] + [1 for i in range(len(pos_feats) - poscutoff)]
 
-prob = svm_problem(train_signs, train_feats)
-param = svm_parameter('-t 0 -c 4 -b 1')
-model = svm_train(prob, param)
+    prob = svm_problem(train_signs, train_feats)
+    param = svm_parameter('-t 0 -c 4 -b 1')
+    model = svm_train(prob, param)
 
-p_label, p_acc, p_val = svm_predict(test_signs, test_feats, model, '-b 1')
-print 'Label:', p_label
-print 'Accuracy:', p_acc
-print 'Value:', p_val
+    p_label, p_acc, p_val = svm_predict(test_signs, test_feats, model, '-b 1')
+    
+    s = 'Accuracy: '+ str(p_acc)
+    print s
+    logger.info(s)
 
-svm_save_model('SVM.classifier', model)
-print 'Save classifier in \'SVM.classifier\''
-#sr = sorted(vec.items(), key=lambda x:x[1],reverse=True)
-
+    if '-d' in sys.argv:
+        pass
+    else:
+        svm_save_model(os.path.join(out_dir,'SVM.classifier'), model)
+        print 'Save classifier in \'{0}/SVM.classifier\''.format(out_dir)
+        save_dic(out_dir)
+        f = open(os.path.join(out_dir,'SVM.method'),'w')
+        f.write(method)
+        f.close()
