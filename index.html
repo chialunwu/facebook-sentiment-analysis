@@ -90,7 +90,7 @@
   */
 function init(){
 	$('.content').html('<img class="center" id="loadingImg" src="loading.gif" width="400" >');
-	$('.emotion-bar').html();	
+	$('.emotion-bar').html("");	
 	countFlag=0;
 	pushFlag=0;
 	  post = [];
@@ -108,13 +108,16 @@ function getPost(id){
 
         dataURL_statuses = "https://graph.facebook.com/"+id+"/statuses?since="+timeStamp+"&limit="+MAX+"&access_token="+accessToken+"";
         console.log(dataURL_statuses);
-
+	
         $.getJSON(dataURL_statuses,
         {dataType:'json'},
         function(obj){
+	if(obj.data.length==0){
+		$('.content').html("no post result.");
+	  	return;
+	}
           var count = 0;
           postData = obj.data;
-
           sendToToken(postData,count);
         });
     }
